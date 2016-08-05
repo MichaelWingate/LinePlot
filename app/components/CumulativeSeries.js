@@ -178,7 +178,7 @@ var CumulativeSeries = React.createClass({
     var legendTransform = `translate(${props.width-props.padding - 50}, ${props.padding})`;
     return(
       <Chart width={props.width} height={props.height} selectBins={this.selectPoints} unSelect={this.unSelectPoints} displaySelected={props.displaySelected}
-      selectedIDs={ids} selectIDs={props.displaySelected} zoomGraph={this.zoomGraph}>
+        selectedIDs={ids} selectIDs={props.displaySelected} zoomGraph={this.zoomGraph}>
         <Axis orient={"bottom"} scale={xScale} transform={xTransform} width={props.width} height={props.height} label={xLabel} />
           {lines}
           {allCircles}

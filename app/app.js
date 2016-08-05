@@ -137,6 +137,7 @@ var LinePlotApp = React.createClass({
           Style: <br/><input type="radio" name="style" value="normal" checked={this.state.style == "normal"} onChange={this.styleChange}/>Normal <br/>
                       <input type="radio" name="style" value="cumulative" checked={this.state.style == "cumulative"} onChange={this.styleChange}/>Cumulative <br/>
                       <input type="radio" name="style" value="categorical" checked={this.state.style == "categorical"} onChange={this.styleChange}/>Categorical <br/>
+                      <input type="radio" name="style" value="polar" checked={this.state.style == "polar"} onChange={this.styleChange}/>Polar <br/>
           yMeasurement: <br/><input type="radio" name="y" value="Temp" checked={this.state.y == "Temp"} onChange={this.yChange}/>Temperature <br />
                         <input type="radio" name="y" value="Weather" checked={this.state.y == "Weather"} onChange={this.yChange}/>Weather <br/>
           <input type="submit" value="Submit" />
