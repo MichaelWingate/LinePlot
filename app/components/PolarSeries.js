@@ -8,6 +8,12 @@ var Point = require("./Point");
 var IconPoint = require("./IconPoint");
 var Line = require("./Line");
 
+var polarX = function(r,i,theta) {
+  return(r*Math.cos(i*theta));
+};
+var polarY = function(r,i,theta) {
+  return(r*Math.sin(i*theta));
+};
 var PolarSeries = React.createClass({
   getInitialState: function() {
     return({
@@ -56,19 +62,31 @@ var PolarSeries = React.createClass({
   render: function() {
     var props = this.props;
 
+    var xRadius = (props.width-props.padding-props.padding)/2;
+    var yRadius = (props.height - props.padding-props.padding)/2;
+    var radiusMin = d3.min([xRadius,yRadius]);
+
+    var rMin = d3.min(props.data, function(value) {return value[props.measurement]});
+    var rMax = d3.max(props.data, function(value) {return value[props.measurement]});
+    var radiusRange = [50,radiusMin];
+
+    var radiusScale = d3.scaleLinear()
+      .domain([rMin,rMax])
+      .range(radiusRange);
+
     var data = [];
     var theta = 2*Math.PI / props.data.length;
     props.data.map(function(value,i) {
-      var cx = value[props.measurement] * Math.cos(i * theta);
-      var cy = value[props.measurement] * Math.sin(i * theta);
+      var cx = polarX(radiusScale(value[props.measurement]),i,theta);
+      var cy = polarY(radiusScale(value[props.measurement]),i,theta);
       var values = {cx: cx, cy: cy, data: value};
       data.push(values);
     })
 
-    var xMin = d3.min(data, function(value) {return value.cx;});
-    var xMax = d3.max(data, function(value) {return value.cx;});
-    var yMin = d3.min(data, function(value) {return value.cy;});
-    var yMax = d3.max(data, function(value) {return value.cy;});
+    var xMin = d3.min(data, function(value) {return Math.abs(value.cx);});
+    var xMax = d3.max(data, function(value) {return Math.abs(value.cx);});
+    var yMin = d3.min(data, function(value) {return Math.abs(value.cy);});
+    var yMax = d3.max(data, function(value) {return Math.abs(value.cy);});
 
     var xRange = [props.padding, props.width-props.padding];
     var yRange = [props.height - props.padding, props.padding];
@@ -86,11 +104,11 @@ var PolarSeries = React.createClass({
     }
 
     var xScale = d3.scaleLinear()
-      .domain([xMin,xMax])
+      .domain([-xMax,xMax])
       .range(xRange);
 
     var yScale = d3.scaleLinear()
-      .domain([yMin,yMax])
+      .domain([-yMax,yMax])
       .range(yRange);
 
     var leftSelect = this.state.selection.left;
