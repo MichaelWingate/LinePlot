@@ -8,11 +8,11 @@ var Point = require("./Point");
 var IconPoint = require("./IconPoint");
 var Line = require("./Line");
 
-var polarX = function(r,i,theta) {
-  return(r*Math.cos(i*theta));
+var polarX = function(r,theta) {
+  return(r*Math.cos(theta));
 };
-var polarY = function(r,i,theta) {
-  return(r*Math.sin(i*theta));
+var polarY = function(r,theta) {
+  return(r*Math.sin(theta));
 };
 var PolarSeries = React.createClass({
   getInitialState: function() {
@@ -24,8 +24,18 @@ var PolarSeries = React.createClass({
         bottom: 0,
       },
       areaSelecting: false,
-      zoomTransform: null
+      zoomTransform: null,
+      thetas: [],
     })
+  },
+  componentWillMount: function() {
+    var theta = [];
+    var data = this.props.data;
+    data.map(function(value,i) {
+      theta.push((2*Math.PI / data.length)*i)
+    })
+    theta = _.shuffle(theta);
+    this.setState({thetas: theta});
   },
   getDefaultProps: function(){
     return {
@@ -66,19 +76,28 @@ var PolarSeries = React.createClass({
     var yRadius = (props.height - props.padding-props.padding)/2;
     var radiusMin = d3.min([xRadius,yRadius]);
 
-    var rMin = d3.min(props.data, function(value) {return value[props.measurement]});
-    var rMax = d3.max(props.data, function(value) {return value[props.measurement]});
-    var radiusRange = [50,radiusMin];
+    var sortedRadius = props.data.sort(function(a,b) {
+      return d3.ascending(a[props.measurement],b[props.measurement]);
+    })
+    var rMin = sortedRadius[0][props.measurement];
+    var rMax = sortedRadius[sortedRadius.length-1][props.measurement];
+
+    var center = 50;
+    if(sortedRadius[0][props.measurement] != sortedRadius[1][props.measurement]) {
+      var center = 0;
+    }
+
+    var radiusRange = [center,radiusMin];
 
     var radiusScale = d3.scaleLinear()
       .domain([rMin,rMax])
       .range(radiusRange);
 
     var data = [];
-    var theta = 2*Math.PI / props.data.length;
+    var thetas = this.state.thetas;
     props.data.map(function(value,i) {
-      var cx = polarX(radiusScale(value[props.measurement]),i,theta);
-      var cy = polarY(radiusScale(value[props.measurement]),i,theta);
+      var cx = polarX(radiusScale(value[props.measurement]),thetas[i]);
+      var cy = polarY(radiusScale(value[props.measurement]),thetas[i]);
       var values = {cx: cx, cy: cy, data: value};
       data.push(values);
     })
@@ -152,12 +171,27 @@ var PolarSeries = React.createClass({
       return(<g key={i}>{renderPoint}</g>)
     });
 
+    var circleNumber = 4;
+    var emptyArray = [];
+    for (var i=0;i<circleNumber;i++) {
+      emptyArray.push([]);
+    }
+    var circleColors = ["gray","yellow","orange","red"];
+    var colorScale = d3.scaleLinear()
+      .domain([0,circleNumber-1])
+      .range(["yellow","red"]);
+    var circles = emptyArray.map(function(nothing,i) {
+      var circleRadius = radiusMin/(i+1);
+      return(<circle cx={xScale(0)} cy={yScale(0)} stroke="black" fill={colorScale(i)} r={circleRadius} style={{opacity: '0.5',}} key={i} />)
+    })
+
     var xAxis = <line x1={xRange[0]} x2={xRange[1]} y1={yScale(0)} y2={yScale(0)} stroke="black" strokeWidth={2} />;
     var yAxis = <line x1={xScale(0)} x2={xScale(0)} y1={yRange[0]} y2={yRange[1]} stroke="black" strokeWidth={2} />;
 
     return(
       <Chart width={props.width} height={props.height} selectBins={this.selectPoints} unSelect={this.unSelectPoints} displaySelected={props.displaySelected}
         selectedIDs={ids} selectIDs={props.displaySelected} zoomGraph={this.zoomGraph}>
+        {circles}
         {xAxis}{yAxis}
         {points}
       </Chart>
